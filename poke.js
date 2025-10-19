@@ -34,7 +34,7 @@ const func1 = async () => {
                             <div class="card-body">
                                 <h5 class="card-title">${data.name}</h5>
                                 <p class="card-text">Type: ${data.types.map(item => item.type.name).join(`,`)}</p>
-                                <a href="#" class="btn btn-primary">more</a>
+                                <a href="#" class="btn btn-primary" data-name="${data.name}">more</a>
                             </div>
                         </div>`
 
@@ -68,9 +68,10 @@ searchbtn.addEventListener(`click`, async () => {
         // console.log(res)
         if (!res.ok) throw new Error(`pokemon not found`)
         const data = await res.json()
-        console.log(data.types.map(item => item.type.name).join(`,`))
+        // console.log(data.types.map(item => item.type.name).join(`,`))
         const imgsrc = data.sprites.front_default
-        console.log(imgsrc)
+        // console.log(imgsrc)
+        // console.log(data.moves.map(item=>item.move.name).join(`,`))
         if (imgsrc) {
             const div = document.createElement(`div`)
             div.innerHTML = `
@@ -79,13 +80,68 @@ searchbtn.addEventListener(`click`, async () => {
                             <div class="card-body">
                                 <h5 class="card-title">${data.name}</h5>
                                 <p class="card-text">Type: ${data.types.map(item => item.type.name).join(`,`)}</p>
-                                <a href="#" class="btn btn-primary">more</a>
-                            </div>
+                                <a href="#" class="btn btn-primary" data-name="${data.name}">more</a>
+                            </div> 
                         </div>`
             container.appendChild(div)
         }
     }
     catch (err) {
         console.log(err)
+    }
+})
+const cancelbtn = document.querySelector(`.cancelbtn`)
+cancelbtn.addEventListener(`click`, () => {
+    issearching = false
+    stoploading = false
+    container.innerHTML = ""
+    func1()
+})
+
+const showdetails = async (targetname) => {
+    container.innerHTML = ""
+    stoploading = true
+    issearching = true
+    try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetname}`)
+        if (!res.ok) throw new error('pokemon not found')
+        const data = await res.json()
+    console.log(data)
+        const stats = data.stats.map(s => `${s.stat.name}: ${s.base_stat}`).join("<br>")
+        const abilities = data.abilities.map(a => a.ability.name).join(`,`)
+        const imgsrc = data.sprites.front_default
+        if (imgsrc) {
+            const detaildiv = document.createElement('div')
+            detaildiv.classList.add("text-center", "mt-4")
+            detaildiv.innerHTML = `<div class="card mx-auto" style="width: 22rem;">
+        <img src="${imgsrc}" class="card-img-top" alt="${data.name}">
+        <div class="card-body">
+          <h3 class="card-title text-capitalize">${data.name}</h3>
+          <p><strong>Type:</strong> ${data.types.map(t => t.type.name).join(", ")}</p>
+          <p><strong>Abilities:</strong> ${abilities}</p>
+          <p><strong>Stats:</strong><br>${stats}</p>
+          <button class="btn btn-secondary back-btn mt-3">Back</button>
+        </div>
+      </div>`
+            container.appendChild(detaildiv)
+
+        }
+    }
+    catch (err) {
+        console.log(err)
+    }
+}
+document.addEventListener(`click`, async (e) => {
+    if (e.target.classList.contains(`btn-primary`)&& e.target.hasAttribute("data-name")) {
+        e.preventDefault()
+        console.log(`clicked`)
+        const targetname = e.target.getAttribute(`data-name`)
+        showdetails(targetname)
+    }
+    else if(e.target.classList.contains(`back-btn`)){
+        issearching =false
+        stoploading=false
+        container.innerHTML=""
+        func1()
     }
 })

@@ -48,9 +48,23 @@
   font-size: 1em;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-right:2px;
 }
 
 .searchbtn:hover {
   background-color: #0056b3;
 }
 
+.cancelbtn{
+    background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.cancelbtn:hover {
+  background-color: #0056b3;
+}
