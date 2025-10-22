@@ -1,18 +1,19 @@
 //movement pf page to show next and prev buttons
+const movement = document.querySelector(`.movement`);
+let isscrollhandleractive = true;
 const onScroll = () => {
-    const movement = document.querySelector(`.movement`);
+    if (!isscrollhandleractive) return;
     const scrollpos = window.scrollY + window.innerHeight;
     const pageht = document.documentElement.scrollHeight;
+    //not at bottom
+    movement.classList.remove(`show`);
+    movement.classList.add(`hidden`);
     if (scrollpos >= pageht - 100) {
         //near bottom
         movement.classList.remove(`hidden`);
         movement.classList.add(`show`);
     }
-    //not at bottom
-    else {
-        movement.classList.remove(`show`);
-        movement.classList.add(`hidden`);
-    }
+
 }
 
 //coubtrs to keep track of fetched pokemons
@@ -23,12 +24,8 @@ let counter = 32;
 
 const container = document.createElement("div");
 
-// let stoploading = false;
-// let issearching = false;
-
 //main function to fetch and display pokemon cards
 const pokemoncards = async () => {
-    // stoploading = false;
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=20000`);
     const list = await res.json();
     const dataset = [];
@@ -41,10 +38,9 @@ const pokemoncards = async () => {
 
     container.className = "d-flex flex-wrap justify-content-center gap-3";
     document.body.appendChild(container);
-
+    // console.log(i,counter)
     //ftech data for first 32 pokemons and create cards
     for (i; i < counter; i++) {
-        // if (stoploading || issearching) break;
         try {
             const url = urlset[i];
             const res1 = await fetch(url);
@@ -88,16 +84,12 @@ const searchpokemon = async () => {
     // console.log(pokename)
     if (!pokename) {
         alert("please enter a pokemon name");
-        issearching = false;
-        stoploading = false;
         container.innerHTML = ""; // clear previous cards
         i = 0;
         counter = 32;
         pokemoncards(); // show default cards
         return; // exit the function early
     }
-    stoploading = true;
-    issearching = true;
     container.innerHTML = "";//clear previous results
     await new Promise(resolve => setTimeout(resolve, 100));//wait for ongoing fetch to stop
 
@@ -134,8 +126,6 @@ const searchpokemon = async () => {
 const cancelbtn = document.querySelector(`.cancelbtn`);
 
 const cancelsearch = () => {
-    issearching = false;
-    stoploading = false;
     container.innerHTML = "";
     i = 0;
     counter = 32;
@@ -146,8 +136,6 @@ const cancelsearch = () => {
 //function to show extra details of a  pokemon using more button
 const showdetails = async (targetname) => {
     container.innerHTML = "";
-    stoploading = true;
-    issearching = true;
     try {
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetname}`);
         if (!res.ok) throw new error('pokemon not found');
@@ -184,27 +172,60 @@ const showmore = async (e) => {
         e.preventDefault();
         // console.log(`clicked`)
         const targetname = e.target.getAttribute(`data-name`);
+        isscrollhandleractive = false;
+        movement.classList.add(`hidden`)
         showdetails(targetname);
     }
     else if (e.target.classList.contains(`back-btn`)) {
-        issearching = false;
-        stoploading = false;
         container.innerHTML = "";
+        document.querySelector(`.pokename`).value = '';
         i = counter - 32;
+        isscrollhandleractive = false;
+        movement.classList.add(`hidden`)
+        await pokemoncards();
+        isscrollhandleractive = true;
+        onScroll();
         // console.log(i, counter);
-        pokemoncards();
     }
 }
 
 //next btn functionality
 const nextbtn = document.querySelector('.next');
-const nextsearch = () => {
-    stoploading = false;
-    issearching = false;
+const nextsearch = async () => {
     container.innerHTML = '';
     i = counter;
     counter += 32;
-    pokemoncards();
+    isscrollhandleractive = false;
+    await pokemoncards();
+    isscrollhandleractive = true;
+    onScroll();
+}
+
+const prevbtn = document.querySelector(`.prev`);
+const prevsearch = async () => {
+    i = i - 32;
+    // console.log(i, counter);
+    if (i < 0||counter<=32) {
+        alert("Starting of the page");
+        i = 0;
+        counter = 32;
+        container.innerHTML = '';
+        isscrollhandleractive = false;
+        await pokemoncards();
+        isscrollhandleractive = true;
+        onScroll();
+    }
+    else {
+        counter = i;
+        i = i - 32;
+        if(i<0) i=0;
+        // console.log(i,counter)
+        container.innerHTML = ''
+        isscrollhandleractive = false;
+        await pokemoncards();
+        isscrollhandleractive = true;
+        onScroll();
+    }
 }
 //attached scroll event listener
 window.addEventListener(`scroll`, onScroll);
@@ -216,3 +237,5 @@ cancelbtn.addEventListener(`click`, cancelsearch);
 nextbtn.addEventListener(`click`, nextsearch);
 //show more details and back button event listener using event delegation
 document.addEventListener(`click`, showmore);
+
+prevbtn.addEventListener(`click`, prevsearch)
